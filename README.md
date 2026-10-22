@@ -8,6 +8,8 @@ Your Steam News feed then fills up with copies of what is basically one ad.
 
 **Steam News Dedupe** keeps the first copy of each post in the Steam News Hub and hides the rest.
 
+![Steam News Dedupe](clip.webp)
+
 ## Features
 
 - **One post instead of many.** Duplicate announcements across different games collapse into a single entry.
