@@ -1,0 +1,24 @@
+[plugin]
+id = "steam-news-dedupe"
+name = "Steam News Dedupe"
+version = "1.0.0"
+author = "Nito"
+description = "Collapses identical news posts that publishers copy across every game in a franchise, so the News Hub shows each post once."
+
+[frontend]
+entry = "frontend/index.tsx"
+
+[webkit]
+entry = "webview/preload.ts"
+
+[compiler]
+# "auto" installs the built plugin straight into your Millennium plugins folder.
+output_path = "auto"
+
+[dev]
+auto_restart = true
+reload_steamui_when = "frontend"
+
+[logger]
+frontend_prefix = "NewsDedupe"
+webview_prefix  = "NewsDedupe"
