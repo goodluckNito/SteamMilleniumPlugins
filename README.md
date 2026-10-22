@@ -1,57 +1,62 @@
-# Steam News Dedupe (Millennium plugin)
+# Steam News Dedupe
 
-Publishers often copy the same news post into every game in a franchise
-("WB Games Autumn Sale is here", "Last Chance to buy your favorite DC Games…").
-This plugin keeps only the first copy in the **Steam News Hub** (Store → News)
-and hides the rest.
+Stop seeing the same sale announcement ten times.
 
-The post that's kept gets a small **"+N duplicates"** pill in its top-right corner.
-Hover over it to see which games also got the post, or click it to show or hide the copies.
+Publishers often post one identical announcement for **every game in a franchise**, such as
+"WB Games Autumn Sale is here" on every WB title you own or "Fallout Day Celebrations" on both Fallout 4 and Fallout 76.
+Your Steam News feed then fills up with copies of what is basically one ad.
 
-## Install
+**Steam News Dedupe** keeps the first copy of each post in the Steam News Hub and hides the rest.
 
-Prerequisites: [Millennium](https://steambrew.app) ≥ 3.4 and [Bun](https://bun.com).
+## Features
 
-```powershell
-# Windows: install Bun once, if you don't have it
-powershell -c "irm bun.sh/install.ps1 | iex"
-```
+- **One post instead of many.** Duplicate announcements across different games collapse into a single entry.
+- **Nothing is lost.** The post that stays shows a small **+N duplicates** badge. Hover it to see which other games got the same post, or click it to show or hide the copies.
+- **Careful matching.** Posts are merged when they share a title **and** either have the same text (store links and images are ignored) or were posted within 3 days of each other. Generic titles like "Patch Notes" only merge when the text matches too.
+- **Works as you scroll.** Posts loaded by infinite scroll are checked as they appear.
+- **No network calls outside Steam.** The plugin only re-reads the event data the News Hub already loads from `store.steampowered.com`.
+
+## Settings
+
+Open **Millennium → Plugins → Steam News Dedupe**:
+
+| Setting | Default | Description |
+|---|---|---|
+| Hide duplicate news posts | On | Master switch. |
+| Aggressive matching (title only) | Off | Merge *any* posts with the same title, even if the text differs. |
+| Show "+N duplicates" badge | On | Show the badge on the post that's kept. |
+
+Changes apply right away. If they don't, reload the News page.
+
+## Where it works
+
+- The Steam **News Hub** (Store → News, `store.steampowered.com/news`) in the Steam client.
+
+The **What's New** shelf on the Library home page isn't covered yet.
+
+## Building from source
+
+Requires [Millennium](https://steambrew.app) ≥ 3.4 and [Bun](https://bun.com) or Node.js.
 
 ```bash
-cd steam-news-dedupe
-bun install
-bun run build
+bun install        # or: npm install
+bun run build      # or: npx starlight pack
 ```
 
-`bun run build` packs the plugin and installs it straight into Millennium
-(`output_path = "auto"` in `millennium.toml`). Restart Steam, then open
-**Millennium → Plugins**, enable **Steam News Dedupe**, and reload Steam's UI when it asks.
+The build installs the plugin into your local Millennium (`output_path = "auto"` in `millennium.toml`).
+Then enable it under Millennium → Plugins.
 
-## Settings (Millennium → Plugins → Steam News Dedupe)
+### Project layout
 
-| Setting | Default | What it does |
-|---|---|---|
-| Hide duplicate news posts | on | Master switch. |
-| Aggressive matching (title only) | off | Merge *any* posts that share a title. When this is off, posts must share a title **and** either have the same body text (links and images are ignored) or be posted within 3 days of each other. |
-| Show "+N duplicates" badge | on | Show the pill on the post that's kept. |
+| Path | Purpose |
+|---|---|
+| `webview/preload.ts` | Injected into Steam's web views. It only runs on `store.steampowered.com/news/*`. |
+| `webview/dedupe.ts` | Reads the hub's event data (via the Performance API, without patching `fetch`/XHR), groups matching posts, and hides the duplicate cards. |
+| `frontend/index.tsx` | Settings panel. Settings are stored with Millennium's plugin config and shared with the webview script. |
+| `shared/settings.ts` | Setting keys and defaults. |
 
-## How it works
+To debug, open the News Hub devtools console and inspect `window.__newsDedupe`.
 
-* `webview/preload.ts` is injected by Millennium into Steam's web views. It only runs on
-  `store.steampowered.com/news/*` (the News Hub, both in the Steam client and in its store browser).
-* `webview/dedupe.ts` reads the event data the hub already loads (`/events/ajaxgetusereventcalendarrange`,
-  `/events/ajaxgeteventdetails`, …). It finds those requests through the Performance API, so it never patches the page's own
-  `fetch`/XHR. Then it groups feed cards whose posts match and hides every card after the first.
-* The post you have open (`?emgid=…` or a direct `/view/<id>` link) is never hidden, and nothing inside the post viewer popup is touched.
-* `frontend/index.tsx` holds the settings panel. The settings are stored with Millennium's plugin config,
-  which the webview script also reads, and changes apply live.
+## License
 
-Debugging: in the News Hub's devtools console, `window.__newsDedupe` shows the parsed events and settings.
-
-## Limitations
-
-* This only covers the News Hub. The "What's New" shelf on the Library home page is a separate part of
-  Steam's own UI and isn't de-duplicated yet.
-* Even with aggressive matching off, two different posts that share the exact same title (20+ characters)
-  and go up within 3 days of each other are merged, even if their text differs. That's deliberate:
-  franchise posts often swap the game's name into the body. Short, generic titles like "Patch Notes" only merge when the body text matches too.
+[MIT](LICENSE)
